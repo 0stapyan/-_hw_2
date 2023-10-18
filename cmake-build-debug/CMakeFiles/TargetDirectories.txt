@@ -1,0 +1,3 @@
+/Users/ostapturash/-_hw_2/cmake-build-debug/CMakeFiles/__hw_2.dir
+/Users/ostapturash/-_hw_2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/ostapturash/-_hw_2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

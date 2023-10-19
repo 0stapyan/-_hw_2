@@ -6,7 +6,6 @@ class Text{
 public:
     Text();
     void PrintText() const;
-    void InsertText(int line, int symbolIndex, const std::string& text);
     void EditText(const std::string& newText);
     std::string GetText() const;
 
@@ -30,6 +29,7 @@ public:
     Editor(Text& editor, FileManager& fileCommands);
     void AddText(const std::string& textToAdd);
     void AddNewLine();
+    void InsertText(int line, int symbolIndex, const std::string& text);
     void SearchForText(const std::string& searchText);
     void ClearConsole();
     void DeleteText(int line, int symbolIndex, int numSymbols);
@@ -49,13 +49,29 @@ void Text::PrintText() const {
     std::cout << text << std::endl;
 }
 
-void Text::InsertText(int line, int symbolIndex, const std::string& textToInsert){
-    if (line >= 0 && line <= text.length() && symbolIndex >= 0){
-        text.insert(line+symbolIndex,textToInsert);
+void Editor::InsertText(int line, int symbolIndex, const std::string& textToInsert) {
+    std::string currentText = editor.GetText();
+
+    int lineNum = 0;
+    int linePos = 0;
+
+    for (char c : currentText) {
+        if (lineNum == line && linePos == symbolIndex) {
+            currentText.insert(linePos + lineNum, textToInsert);
+            editor.EditText(currentText);
+            std::cout << "Text inserted at Line " << lineNum << ", Position " << linePos << std::endl;
+            return;
+        }
+
+        if (c == '\n') {
+            ++lineNum;
+            linePos = 0;
+        } else {
+            ++linePos;
+        }
     }
-    else{
-        std::cout << "Invalid insertion position." << std::endl;
-    }
+
+    std::cout << "Invalid insertion position. Text was not inserted." << std::endl;
 }
 
 void Text::EditText(const std::string& newText) {
@@ -104,13 +120,32 @@ void Editor::AddNewLine() {
 }
 
 void Editor::SearchForText(const std::string& searchText) {
-    size_t found = editor.GetText().find(searchText);
-    if (found != std::string::npos) {
-        std::cout << "Text found at position " << found << std::endl;
-    } else {
-        std::cout << "Text not found." << std::endl;
+    std::string text = editor.GetText();
+
+    int lineNum = 0;
+    int linePos = 0;
+
+    for (char c : text) {
+        if (c == '\n') {
+            ++lineNum;
+            linePos = 0;
+        } else {
+            if (linePos == 0) {
+                std::cout << "Line " << lineNum << ": ";
+            }
+
+            if (c == searchText[0]) {
+                size_t foundPos = text.find(searchText, linePos);
+                if (foundPos != std::string::npos) {
+                    std::cout << "Found at line " << lineNum << ", position " << foundPos - linePos << std::endl;
+                }
+            }
+
+            ++linePos;
+        }
     }
 }
+
 
 void Editor::ClearConsole() {
     system("clear");
@@ -203,7 +238,7 @@ int main(){
             std::cin.ignore();
             std::getline(std::cin, textToInsert);
 
-            editor.InsertText(line, symbolIndex, textToInsert);
+            commandHandler.InsertText(line, symbolIndex, textToInsert);
         }
 
         else if (userInput == "7"){

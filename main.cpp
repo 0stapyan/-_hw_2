@@ -32,6 +32,7 @@ public:
     void AddNewLine();
     void SearchForText(const std::string& searchText);
     void ClearConsole();
+    void DeleteText(int line, int symbolIndex, int numSymbols);
 
 private:
     Text& editor;
@@ -115,6 +116,32 @@ void Editor::ClearConsole() {
     system("clear");
 }
 
+void Editor::DeleteText(int line, int symbolIndex, int numSymbols){
+    std::string currentText = editor.GetText();
+
+    if (line >= 0 && line < currentText.length() && symbolIndex >= 0){
+
+        if (numSymbols > 0){
+            size_t position = line + symbolIndex;
+
+            if (position + numSymbols <= currentText.length()){
+                currentText.erase(position, numSymbols);
+                editor.EditText(currentText);
+                std::cout << "Text deleted" << std::endl;
+            }
+            else{
+                std::cout << "Too big deletion range" << std::endl;
+            }
+        }
+        else{
+            std::cout << "Number of symbols have to be a positive number" << std::endl;
+        }
+    }
+    else{
+        std:: cout << "Wrong deletion position" << std::endl;
+    }
+}
+
 int main(){
     Text editor;
     FileManager fileManager(editor);
@@ -189,6 +216,16 @@ int main(){
 
         else if (userInput == "8"){
             commandHandler.ClearConsole();
+        }
+
+        else if (userInput == "9"){
+
+            int line, symbolIndex, numSymbols;
+
+            std::cout << "Please enter the line, index and number of symbols you want to delete";
+            std::cin >> line >> symbolIndex >> numSymbols;
+
+            commandHandler.DeleteText(line, symbolIndex, numSymbols);
         }
     }
     return 0;

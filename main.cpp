@@ -11,6 +11,9 @@ public:
     std::string GetText() const;
     void Undo();
     void Redo();
+    void Cut(int line, int symbolIndex, int numSymbols);
+    void Copy(int line, int symbolIndex, int numSymbols);
+    void Paste(int line, int symbolIndex);
 
 
 private:
@@ -18,6 +21,7 @@ private:
     std::string currentFileName;
     std::stack<std::string> history;
     std::stack<std::string> redoHistory;
+    std::string clipboard;
 };
 
 class FileManager{
@@ -42,6 +46,9 @@ public:
     void ReplaceText(int line, int symbolIndex, const std::string &newText);
     void Undo();
     void Redo();
+    void Cut(int line, int symbolIndex, int numSymbols);
+    void Copy(int line, int symbolIndex, int numSymbols);
+    void Paste(int line, int symbolIndex);
 
 private:
     Text& editor;
@@ -52,6 +59,7 @@ Text::Text() {
     text = "";
     currentFileName = "";
     history.push(text);
+    clipboard = "";
 }
 
 void Text::PrintText() const {
@@ -108,6 +116,36 @@ void Text::Redo() {
         history.push(text);
         text = redoHistory.top();
         redoHistory.pop();
+    }
+}
+
+void Text::Cut(int line, int symbolIndex, int numSymbols) {
+    if (line >= 0 && line < text.length() && symbolIndex >= 0) {
+        size_t position = line + symbolIndex;
+        if (position + numSymbols <= text.length()) {
+            clipboard = text.substr(position, numSymbols);
+            text.erase(position, numSymbols);
+            history.push(text);
+            redoHistory = std::stack<std::string>();
+        }
+    }
+}
+
+void Text::Copy(int line, int symbolIndex, int numSymbols) {
+    if (line >= 0 && line < text.length() && symbolIndex >= 0) {
+        size_t position = line + symbolIndex;
+        if (position + numSymbols <= text.length()) {
+            clipboard = text.substr(position, numSymbols);
+        }
+    }
+}
+
+void Text::Paste(int line, int symbolIndex) {
+    if (!clipboard.empty()) {
+        size_t position = line + symbolIndex;
+        text.insert(position, clipboard);
+        history.push(text);
+        redoHistory = std::stack<std::string>();
     }
 }
 
@@ -242,6 +280,18 @@ void Editor::Redo() {
     editor.Redo();
 }
 
+void Editor::Cut(int line, int symbolIndex, int numSymbols) {
+    editor.Cut(line, symbolIndex, numSymbols);
+}
+
+void Editor::Copy(int line, int symbolIndex, int numSymbols) {
+    editor.Copy(line, symbolIndex, numSymbols);
+}
+
+void Editor::Paste(int line, int symbolIndex) {
+    editor.Paste(line, symbolIndex);
+}
+
 int main(){
     Text editor;
     FileManager fileManager(editor);
@@ -262,7 +312,10 @@ int main(){
         std::cout << "9. Delete text" << std::endl;
         std::cout << "10. Undo" << std::endl;
         std::cout << "11. Redo" << std::endl;
-        std::cout << "14. Replace text" << std::endl;
+        std::cout << "12. Cut" << std::endl;
+        std::cout << "13. Copy" << std::endl;
+        std::cout << "14. Paste" << std::endl;
+        std::cout << "15. Replace text" << std::endl;
 
         std::cin >> userInput;
 
@@ -335,11 +388,38 @@ int main(){
 
         else if (userInput == "10") {
             commandHandler.Undo();
-        } else if (userInput == "11") {
+        }
+
+        else if (userInput == "11") {
             commandHandler.Redo();
         }
 
+        else if (userInput == "12") {
+            int line, symbolIndex, numSymbols;
+
+            std::cout << "Please enter the line, index and number of symbols to cut: ";
+            std::cin >> line >> symbolIndex >> numSymbols;
+            commandHandler.Cut(line, symbolIndex, numSymbols);
+        }
+
+        else if (userInput == "13") {
+            int line, symbolIndex, numSymbols;
+
+            std::cout << "Please enter the line, index and number of symbols to copy: ";
+            std::cin >> line >> symbolIndex >> numSymbols;
+            commandHandler.Copy(line, symbolIndex, numSymbols);
+        }
+
         else if (userInput == "14") {
+            int line, symbolIndex;
+            std::cout << "Choose line to paste: ";
+            std::cin >> line;
+            std::cout << "Choose index to paste: ";
+            std::cin >> symbolIndex;
+            commandHandler.Paste(line, symbolIndex);
+        }
+
+        else if (userInput == "15") {
 
             int line, symbolIndex;
             std::string newText;

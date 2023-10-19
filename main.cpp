@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <stack>
 
 class Text{
 public:
@@ -8,10 +9,15 @@ public:
     void PrintText() const;
     void EditText(const std::string& newText);
     std::string GetText() const;
+    void Undo();
+    void Redo();
+
 
 private:
     std::string text;
     std::string currentFileName;
+    std::stack<std::string> history;
+    std::stack<std::string> redoHistory;
 };
 
 class FileManager{
@@ -34,6 +40,8 @@ public:
     void ClearConsole();
     void DeleteText(int line, int symbolIndex, int numSymbols);
     void ReplaceText(int line, int symbolIndex, const std::string &newText);
+    void Undo();
+    void Redo();
 
 private:
     Text& editor;
@@ -43,6 +51,7 @@ private:
 Text::Text() {
     text = "";
     currentFileName = "";
+    history.push(text);
 }
 
 void Text::PrintText() const {
@@ -76,11 +85,30 @@ void Editor::InsertText(int line, int symbolIndex, const std::string& textToInse
 }
 
 void Text::EditText(const std::string& newText) {
+
+    history.push(text);
+    redoHistory = std::stack<std::string>();
     text = newText;
 }
 
 std::string Text::GetText() const {
     return text;
+}
+
+void Text::Undo() {
+    if (history.size() > 1) {
+        redoHistory.push(text);
+        history.pop();
+        text = history.top();
+    }
+}
+
+void Text::Redo() {
+    if (!redoHistory.empty()) {
+        history.push(text);
+        text = redoHistory.top();
+        redoHistory.pop();
+    }
 }
 
 FileManager::FileManager(Text &editor): editor(editor) {}
@@ -206,6 +234,14 @@ void Editor::ReplaceText(int line, int symbolIndex, const std::string &newText){
     }
 }
 
+void Editor::Undo() {
+    editor.Undo();
+}
+
+void Editor::Redo() {
+    editor.Redo();
+}
+
 int main(){
     Text editor;
     FileManager fileManager(editor);
@@ -224,6 +260,8 @@ int main(){
         std::cout << "7. Search for text" << std::endl;
         std::cout << "8. Clear the text" << std::endl;
         std::cout << "9. Delete text" << std::endl;
+        std::cout << "10. Undo" << std::endl;
+        std::cout << "11. Redo" << std::endl;
         std::cout << "14. Replace text" << std::endl;
 
         std::cin >> userInput;
@@ -293,6 +331,12 @@ int main(){
             std::cin >> line >> symbolIndex >> numSymbols;
 
             commandHandler.DeleteText(line, symbolIndex, numSymbols);
+        }
+
+        else if (userInput == "10") {
+            commandHandler.Undo();
+        } else if (userInput == "11") {
+            commandHandler.Redo();
         }
 
         else if (userInput == "14") {

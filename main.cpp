@@ -33,6 +33,7 @@ public:
     void SearchForText(const std::string& searchText);
     void ClearConsole();
     void DeleteText(int line, int symbolIndex, int numSymbols);
+    void ReplaceText(int line, int symbolIndex, const std::string &newText);
 
 private:
     Text& editor;
@@ -177,12 +178,41 @@ void Editor::DeleteText(int line, int symbolIndex, int numSymbols){
     }
 }
 
+void Editor::ReplaceText(int line, int symbolIndex, const std::string &newText){
+    std::string currentText = editor.GetText();
+
+    int lineNum = 0;
+    int linePos = 0;
+    size_t position = 0;
+
+    for (char c : currentText){
+        if (lineNum == line && linePos == symbolIndex){
+            position = linePos + lineNum;
+            break;
+        }
+
+        if (c == '\n'){
+            ++lineNum;
+            linePos = 0;
+        }
+    }
+    if (position < currentText.length()){
+        currentText.replace(position, newText.length(), newText);
+        editor.EditText(currentText);
+        std::cout << "Text replaced successfully" << std::endl;
+    }
+    else{
+        std::cout << "Wrong replacement position" << std:: endl;
+    }
+}
+
 int main(){
     Text editor;
     FileManager fileManager(editor);
     Editor commandHandler(editor, fileManager);
 
     std::string userInput;
+
     while(true){
         std::cout << "Choose the command:" << std::endl;
         std::cout << "1. Enter text to append" << std::endl;
@@ -193,6 +223,8 @@ int main(){
         std::cout << "6. Insert text by line and symbol index" << std::endl;
         std::cout << "7. Search for text" << std::endl;
         std::cout << "8. Clear the text" << std::endl;
+        std::cout << "9. Delete text" << std::endl;
+        std::cout << "14. Replace text" << std::endl;
 
         std::cin >> userInput;
 
@@ -261,6 +293,24 @@ int main(){
             std::cin >> line >> symbolIndex >> numSymbols;
 
             commandHandler.DeleteText(line, symbolIndex, numSymbols);
+        }
+
+        else if (userInput == "14") {
+
+            int line, symbolIndex;
+            std::string newText;
+
+            std::cout << "Choose line: ";
+            std::cin >> line;
+
+            std::cout << "Choose index: ";
+            std::cin >> symbolIndex;
+
+            std::cout << "Write text to replace: ";
+            std::cin.ignore();
+            std::getline(std::cin, newText);
+
+            commandHandler.ReplaceText(line, symbolIndex, newText);
         }
     }
     return 0;
